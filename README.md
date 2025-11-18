@@ -2,8 +2,8 @@
 这个程序用于计算机通过Python与DM-IMU通信，其一，接收并解析来自DM-IMU的数据，其二，向DM-IMU发送指令。
 This program is used for computers to communicate with DM-IMU through Python. Firstly, it receives and parses data from DM-IMU, and secondly, it sends instructions to DM-IMU.
 # 怎么用？ | How to use it?
-详见test.py。
-See test.py for details.
+请先确保已安装serial库，若要运行test.py，请确保已安装matplotlib库。详见test.py。
+Please ensure that the serial module is installed first, and if you want to run test. py, please ensure that the matplotlib module is installed. See test.py for details.
 # 为什么没有发送指令的示例？ | Why are there no examples of sending instructions?
 由于作者的需求只是接收其数据，故未对指令发送部分进行测试，但该部分的数据帧满足DM-IMU手册对数据帧的描述。
 Due to the author's requirement of only receiving their data, the instruction sending part was not tested, but the data frames in this part meet the description of data frames in the DM-IMU manual.
