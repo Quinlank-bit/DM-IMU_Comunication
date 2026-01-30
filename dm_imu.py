@@ -20,7 +20,7 @@ class DM_IMU_CRC16:
                             0xCB7D, 0xDB5C, 0xEB3F, 0xFB1E, 0x8BF9, 0x9BD8, 0xABBB, 0xBB9A, 0x4A75, 0x5A54, 0x6A37, 0x7A16, 0x0AF1, 0x1AD0, 0x2AB3, 0x3A92,
                             0xFD2E, 0xED0F, 0xDD6C, 0xCD4D, 0xBDAA, 0xAD8B, 0x9DE8, 0x8DC9, 0x7C26, 0x6C07, 0x5C64, 0x4C45, 0x3CA2, 0x2C83, 0x1CE0, 0x0CC1,
                             0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8, 0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0],dtype=numpy.uint16)
-    def crc16_check(data:str):
+    def crc16_check(data):
         crc=numpy.uint16(0xffff)
         for i in range(16):
             index=numpy.uint8((crc >> 8 ^ data[i]))
@@ -108,7 +108,7 @@ class DM_IMU_USB:
     
     def start(self,COM:str):
         self.__run_flag=True
-        self.__serial=serial.Serial(COM,921600,timeout=0.01)
+        self.__serial=serial.Serial(COM,921600,timeout=0.001)
         self.__run_thread.start()
         return True
     
@@ -153,28 +153,27 @@ class DM_IMU_USB:
     
     def __run(self):
         self.__serial.reset_input_buffer()
+        data = bytearray()
         while self.__run_flag:
-            data=self.__serial.read(19)
-            if data[0]==numpy.uint8(0x55) and data[1]==numpy.uint8(0xAA) and data[18]==numpy.uint8(0x0A):
-                crc16_in_rawdata=numpy.uint16(unpack("@H",data[16:18])[0])
-                if crc16_in_rawdata == DM_IMU_CRC16.crc16_check(data):
-                    data_type=int(numpy.uint8(data[3]))
-                    x_data=float(unpack("@f",data[4:8])[0])
-                    y_data=float(unpack("@f",data[8:12])[0])
-                    z_data=float(unpack("@f",data[12:16])[0])
-                    if data_type==0x01:
-                        self.__imudata[0]=x_data
-                        self.__imudata[1]=y_data
-                        self.__imudata[2]=z_data
-                    elif data_type==0x02:
-                        self.__imudata[3]=x_data
-                        self.__imudata[4]=y_data
-                        self.__imudata[5]=z_data
-                    else:
-                        self.__imudata[6]=x_data
-                        self.__imudata[7]=y_data
-                        self.__imudata[8]=z_data
-                else:
-                    continue
-            else:
-                continue
+            data.extend(bytearray(self.__serial.read(19)))
+            while len(data)>19:
+                if data[0]==numpy.uint8(0x55) and data[1]==numpy.uint8(0xAA) and data[18]==numpy.uint8(0x0A):
+                    crc16_in_rawdata=numpy.uint16(unpack("@H",data[16:18])[0])
+                    if crc16_in_rawdata == DM_IMU_CRC16.crc16_check(data):
+                        data_type=int(numpy.uint8(data[3]))
+                        x_data=float(unpack("@f",data[4:8])[0])
+                        y_data=float(unpack("@f",data[8:12])[0])
+                        z_data=float(unpack("@f",data[12:16])[0])
+                        if data_type==0x01:
+                            self.__imudata[0]=x_data
+                            self.__imudata[1]=y_data
+                            self.__imudata[2]=z_data
+                        elif data_type==0x02:
+                            self.__imudata[3]=x_data
+                            self.__imudata[4]=y_data
+                            self.__imudata[5]=z_data
+                        else:
+                            self.__imudata[6]=x_data
+                            self.__imudata[7]=y_data
+                            self.__imudata[8]=z_data
+                data.pop(0)
