@@ -153,10 +153,10 @@ class DM_IMU_USB:
     
     def __run(self):
         self.__serial.reset_input_buffer()
-        data = bytearray()
+        data=bytearray()
         while self.__run_flag:
             data.extend(bytearray(self.__serial.read(19)))
-            while len(data)>19:
+            while len(data)>=19:
                 if data[0]==numpy.uint8(0x55) and data[1]==numpy.uint8(0xAA) and data[18]==numpy.uint8(0x0A):
                     crc16_in_rawdata=numpy.uint16(unpack("@H",data[16:18])[0])
                     if crc16_in_rawdata == DM_IMU_CRC16.crc16_check(data):
@@ -176,4 +176,9 @@ class DM_IMU_USB:
                             self.__imudata[6]=x_data
                             self.__imudata[7]=y_data
                             self.__imudata[8]=z_data
+                    if len(data)>19:
+                        data=data[19:]
+                    else:
+                        data=bytearray()
+                    break
                 data.pop(0)
